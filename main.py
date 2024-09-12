@@ -69,14 +69,48 @@ def draw(mouse_pos, mode):
     if mode == 0:
         world_list[mouse_coords[1]][mouse_coords[0]] = -1
 
+
 def clear_lists():
     gui.Button.clear_list()
     gui.NumberField.clear_list()
     gui.Text.clear_list()
 
+def press_create_world():
+    for i, field in enumerate(gui.NumberField.field_list):
+        global world_size_x
+        global world_size_y
+        global world_list
+        
+        if i == 0:
+            world_size_x = int(field.text)
+        if i == 1:
+            world_size_y = int(field.text)
+        world_list = utilities.get_list(start_tile, world_size_y, world_size_x)
+    
+        set_scene_to_world()
+
+
 def set_scene_to_load():
+    popup_output = gui.run_popup("Enter map file name without file extension: ")
+    
+    if popup_output != None:
+        global scene
+        scene = LOAD
+        clear_lists()
+        
+        global world_size_x
+        global world_size_y
+        global world_list
+        
+        dimensions, world_list = utilities.load_map_file(popup_output)
+        world_size_x = int(dimensions[0])
+        world_size_y = int(dimensions[1])
+        
+        set_scene_to_world()
+
+def set_scene_to_create():
     global scene
-    scene = LOAD
+    scene = CREATE
     clear_lists()
     
     back_button = gui.Button(10, 10, "Back", set_scene_to_menu)
@@ -84,11 +118,7 @@ def set_scene_to_load():
     height_field = gui.NumberField(10, 62 + 10 + 32, 3)
     width_text = gui.Text(3 * 24 + 10 + 32, 62, "Width")
     height_text = gui.Text(3 * 24 + 10 + 32, 62 + 10 + 32, "Height")
-
-def set_scene_to_create():
-    global scene
-    scene = CREATE
-    clear_lists()
+    create_world_button = gui.Button(10, 62 + 10 + 32 + 10 + 32 + 10, "Create World", press_create_world)
 
 def set_scene_to_menu():
     global scene
@@ -102,9 +132,9 @@ def set_scene_to_menu():
 def set_scene_to_world():
     global scene
     scene = WORLD
-    gui.NumberField.clear_list()
-    gui.Button.clear_list()
-
+    clear_lists()
+    
+    back_button = gui.Button(10, 720 - 32 - 10, "Back", set_scene_to_menu)
 
 def quit():
     pygame.quit()
@@ -164,7 +194,7 @@ while True:
                     down_pressed = True
                     break
                 case pygame.K_F1:
-                    utilities.save_to_file(input("Save file with the name of: "), world_size_x, world_size_y, world_list)
+                    utilities.save_to_file(world_size_x, world_size_y, world_list)
         if event.type == pygame.KEYUP:
             match event.key:
                 case pygame.K_w:

@@ -1,4 +1,17 @@
 import pygame
+import tkinter as tk
+from tkinter import simpledialog
+
+def run_popup(text) -> str:
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    
+    # Show the input dialog box
+    user_input = simpledialog.askstring("Input", text)
+    
+    root = None
+    # Return the user input
+    return user_input
 
 class Text:
     pygame.font.init()

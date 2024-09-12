@@ -1,3 +1,5 @@
+import gui
+
 def get_list(default_value, lines, letters):
     r = []
     for y in range(lines):
@@ -50,8 +52,8 @@ def load_map_file(file_name:str):
     return ret_dimensions, num_world
 
 #file_name.map
-def save_to_file(file_name, world_size_x, world_size_y, list, space_tiles_in_save_file=False):
-    f = open(f'maps/{file_name}.map', "w")
+def save_to_file(world_size_x, world_size_y, list, space_tiles_in_save_file=False):
+    f = open(f'maps/{gui.run_popup("Save file name without extension: ")}.map', "w")
     f.write(str(world_size_x) + "\n")
     f.write(str(world_size_y) + "\n")
     for y in list:

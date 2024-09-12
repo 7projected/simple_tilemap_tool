@@ -1,4 +1,4 @@
-import pygame, sys , utilities
+import pygame, sys, utilities, gui
 
 pygame.init()
 
@@ -7,6 +7,19 @@ world_size_y = 0
 start_tile = 4 # Empty grass
 
 world_list = []
+
+WORLD = 0
+MAIN_MENU = 1
+CREATE = 2
+LOAD = 3
+
+# GUI IDEAS
+# Main menu - Load map, Create map, Quit, Settings?
+# Create - Tileset name, Width, Height, Default Tile Index (left to right)
+# Load - Map Name, Tileset Name
+# Settings - camera speed
+
+scene = MAIN_MENU
 
 def get_surf_from_world():
     surf = pygame.Surface((world_size_x * 16, world_size_y * 16))
@@ -56,18 +69,56 @@ def draw(mouse_pos, mode):
     if mode == 0:
         world_list[mouse_coords[1]][mouse_coords[0]] = -1
 
-print("1. Load  2. Create")
-start_value = int(input("Enter Option: "))
+def clear_lists():
+    gui.Button.clear_list()
+    gui.NumberField.clear_list()
+    gui.Text.clear_list()
 
-if start_value == 1:
-    dimensions, world_list = utilities.load_map_file(input("Enter map file name without file extension: "))
-    world_size_x = int(dimensions[0])
-    world_size_y = int(dimensions[1])
+def set_scene_to_load():
+    global scene
+    scene = LOAD
+    clear_lists()
+    
+    back_button = gui.Button(10, 10, "Back", set_scene_to_menu)
+    width_field = gui.NumberField(10, 62, 3)
+    height_field = gui.NumberField(10, 62 + 10 + 32, 3)
+    width_text = gui.Text(3 * 24 + 10 + 32, 62, "Width")
+    height_text = gui.Text(3 * 24 + 10 + 32, 62 + 10 + 32, "Height")
 
-if start_value == 2:
-    world_size_x = int(input("World width: "))
-    world_size_y = int(input("World height: "))
-    world_list = utilities.get_list(start_tile, world_size_x, world_size_y)
+def set_scene_to_create():
+    global scene
+    scene = CREATE
+    clear_lists()
+
+def set_scene_to_menu():
+    global scene
+    scene = MAIN_MENU
+    clear_lists()
+    
+    load_button = gui.Button(10, 10, "Load Map  ", set_scene_to_load)
+    create_button = gui.Button(10, 10 + 32 + 10, "Create Map", set_scene_to_create)
+    quit_button = gui.Button(10, 10 + 32 + 10 + 32 + 10, "Quit App  ", quit)
+
+def set_scene_to_world():
+    global scene
+    scene = WORLD
+    gui.NumberField.clear_list()
+    gui.Button.clear_list()
+
+
+def quit():
+    pygame.quit()
+    sys.exit()
+
+# Load Map
+  #  dimensions, world_list = utilities.load_map_file(input("Enter map file name without file extension: "))
+  #  world_size_x = int(dimensions[0])
+  #  world_size_y = int(dimensions[1])
+
+# Create Map
+   # world_size_x = int(input("World width: "))
+   # world_size_y = int(input("World height: "))
+   # world_list = utilities.get_list(start_tile, world_size_x, world_size_y)
 
 screen = pygame.display.set_mode([1280, 720])
 clock = pygame.time.Clock()
@@ -88,13 +139,16 @@ tiles = []
 tile_index = 0
 
 load_tileset("assets/grass_tileset.png", 3, 4)
+set_scene_to_menu()
 while True:
     mouse_pos = pygame.mouse.get_pos()
     
     for event in pygame.event.get():
+        for f in gui.NumberField.field_list:
+            f.poll(event)
+        
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            quit()
         if event.type == pygame.KEYDOWN:
             match event.key:
                 case pygame.K_w:
@@ -128,8 +182,12 @@ while True:
         if event.type == pygame.MOUSEWHEEL:
             if mouse_pos[1] < 720/7:
                 scroll += event.y * scroll_strength
+        
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == pygame.BUTTON_LEFT:
+                for b in gui.Button.button_list:
+                    b.poll(mouse_pos[0], mouse_pos[1])
+                    
                 if mouse_pos[1] < 64:
                     drawing = False
                     tile_index = int((mouse_pos[0] + scroll) / 64)
@@ -158,14 +216,22 @@ while True:
     
     screen.fill([0, 0, 0])
     
-    screen.blit(get_surf_from_world(), (-camera_pos[0], -camera_pos[1]))
+    if scene == WORLD:
+        screen.blit(get_surf_from_world(), (-camera_pos[0], -camera_pos[1]))
+        pygame.draw.rect(screen, [255,255,255], [0, 0, 1280, 72])
+        
+        for i, tile in enumerate(tiles):
+            t = pygame.transform.scale(tile, (64, 64))
+            screen.blit(t, [i*64 - scroll, 4])
     
-    # Background for tile selector
-    pygame.draw.rect(screen, [255,255,255], [0, 0, 1280, 72])
+    for b in gui.Button.button_list:
+        b.draw(screen)
     
-    for i, tile in enumerate(tiles):
-        t = pygame.transform.scale(tile, (64, 64))
-        screen.blit(t, [i*64 - scroll, 4])
+    for f in gui.NumberField.field_list:
+        f.draw(screen)
+    
+    for t in gui.Text.text_list:
+        t.draw(screen)
     
     pygame.display.update()
     clock.tick(60)

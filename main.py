@@ -168,6 +168,10 @@ erasing = False
 tiles = []
 tile_index = 0
 
+icon = pygame.image.load("assets/icon.png")
+pygame.display.set_icon(icon)
+pygame.display.set_caption("Simple Tilemap Tool")
+
 load_tileset("assets/grass_tileset.png", 3, 4)
 set_scene_to_menu()
 while True:

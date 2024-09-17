@@ -13,11 +13,7 @@ MAIN_MENU = 1
 CREATE = 2
 LOAD = 3
 
-# GUI IDEAS
-# Main menu - Load map, Create map, Quit, Settings?
-# Create - Tileset name, Width, Height, Default Tile Index (left to right)
-# Load - Map Name, Tileset Name
-# Settings - camera speed
+# ADD SUPPORT FOR OTHER TILESETS
 
 scene = MAIN_MENU
 
@@ -58,8 +54,12 @@ def movement():
 def draw(mouse_pos, mode):
     global_mouse_pos = (mouse_pos[0] + camera_pos[0],mouse_pos[1] + camera_pos[1])
     mouse_coords = (int(global_mouse_pos[0] / 16), int(global_mouse_pos[1] / 16))
-    
+
+    if mouse_coords[0] < 0:
+        return
     if mouse_coords[0] >= world_size_x:
+        return
+    if mouse_coords[1] < 0:
         return
     if mouse_coords[1] >= world_size_y:
         return
@@ -76,6 +76,7 @@ def clear_lists():
     gui.Text.clear_list()
 
 def press_create_world():
+    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png', 6, 1)
     for i, field in enumerate(gui.NumberField.field_list):
         global world_size_x
         global world_size_y
@@ -86,12 +87,13 @@ def press_create_world():
         if i == 1:
             world_size_y = int(field.text)
         world_list = utilities.get_list(start_tile, world_size_y, world_size_x)
-    
+        
         set_scene_to_world()
 
 
 def set_scene_to_load():
     popup_output = gui.run_popup("Enter map file name without file extension: ")
+    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png', 6, 1)
     
     if popup_output != None:
         global scene
@@ -172,7 +174,6 @@ icon = pygame.image.load("assets/icon.png")
 pygame.display.set_icon(icon)
 pygame.display.set_caption("Simple Tilemap Tool")
 
-load_tileset("assets/grass_tileset.png", 3, 4)
 set_scene_to_menu()
 while True:
     mouse_pos = pygame.mouse.get_pos()
@@ -183,6 +184,7 @@ while True:
         
         if event.type == pygame.QUIT:
             quit()
+        
         if event.type == pygame.KEYDOWN:
             match event.key:
                 case pygame.K_w:
@@ -199,6 +201,7 @@ while True:
                     break
                 case pygame.K_F1:
                     utilities.save_to_file(world_size_x, world_size_y, world_list)
+        
         if event.type == pygame.KEYUP:
             match event.key:
                 case pygame.K_w:
@@ -213,9 +216,11 @@ while True:
                 case pygame.K_s:
                     down_pressed = False
                     break
+        
         if event.type == pygame.MOUSEWHEEL:
             if mouse_pos[1] < 720/7:
                 scroll += event.y * scroll_strength
+        
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == pygame.BUTTON_LEFT:
@@ -234,6 +239,7 @@ while True:
                     erasing = True
                 else:
                     erasing = False
+        
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_LEFT:
                 drawing = False

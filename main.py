@@ -13,30 +13,37 @@ MAIN_MENU = 1
 CREATE = 2
 LOAD = 3
 
+tile_size = 32
+
 # ADD SUPPORT FOR OTHER TILESETS
 
 scene = MAIN_MENU
 
 def get_surf_from_world():
-    surf = pygame.Surface((world_size_x * 16, world_size_y * 16))
+    surf = pygame.Surface((world_size_x * tile_size, world_size_y * tile_size))
     
     for y_i, y in enumerate(world_list):
         for x_i, x in enumerate(y):
             if x != -1:
-                surf.blit(tiles[x], [x_i * 16, y_i * 16])
+                surf.blit(tiles[x], [x_i * tile_size, y_i * tile_size])
     
     return surf
 
-def load_tileset(path, x_tiles, y_tiles):
+def load_tileset(path):
     img = pygame.image.load(path).convert_alpha()
+    
+    x_tiles = int(gui.run_popup("How many rows of tiles on tileset? (X)"))
+    y_tiles = int(gui.run_popup("How many columns of tiles on tileset? (Y)"))
     
     tile_size_x = img.get_width() / x_tiles
     tile_size_y = img.get_height() / y_tiles
     
     for y in range(y_tiles):
         for x in range(x_tiles):
-            tile = pygame.Surface((16, 16))
+            tile = pygame.Surface((tile_size_x, tile_size_y))
             tile.blit(img, (-x * tile_size_x, -y * tile_size_y))
+            
+            tile = pygame.transform.scale(tile, [tile_size, tile_size])
             tiles.append(tile)
 
 
@@ -53,7 +60,7 @@ def movement():
 
 def draw(mouse_pos, mode):
     global_mouse_pos = (mouse_pos[0] + camera_pos[0],mouse_pos[1] + camera_pos[1])
-    mouse_coords = (int(global_mouse_pos[0] / 16), int(global_mouse_pos[1] / 16))
+    mouse_coords = (int(global_mouse_pos[0] / tile_size), int(global_mouse_pos[1] / tile_size))
 
     if mouse_coords[0] < 0:
         return
@@ -76,7 +83,7 @@ def clear_lists():
     gui.Text.clear_list()
 
 def press_create_world():
-    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png', 6, 1)
+    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png')
     for i, field in enumerate(gui.NumberField.field_list):
         global world_size_x
         global world_size_y
@@ -93,7 +100,7 @@ def press_create_world():
 
 def set_scene_to_load():
     popup_output = gui.run_popup("Enter map file name without file extension: ")
-    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png', 6, 1)
+    load_tileset(f'assets/{gui.run_popup("Enter tileset file name without file extension: ")}.png')
     
     if popup_output != None:
         global scene
@@ -156,7 +163,7 @@ screen = pygame.display.set_mode([1280, 720])
 clock = pygame.time.Clock()
 camera_pos = [0, -72]
 camera_speed = 2
-scroll_strength = 2
+scroll_strength = 10
 scroll = 0
 
 up_pressed = False
@@ -247,7 +254,6 @@ while True:
                 erasing = False
                         
     if scroll < 0: scroll = 0
-    if scroll > 100: scroll = 100
     
     if drawing: draw(mouse_pos, 1)
     if erasing: draw(mouse_pos, 0)

@@ -76,6 +76,7 @@ class App:
         tile_size_x = img.get_width() / x_tiles
         tile_size_y = img.get_height() / y_tiles
         
+        self.tiles = []
         for y in range(y_tiles):
             for x in range(x_tiles):
                 tile = pygame.Surface((tile_size_x, tile_size_y))
